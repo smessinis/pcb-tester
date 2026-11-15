@@ -1,0 +1,17 @@
+services:
+  pcbtester:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - pcbtester-data:/data
+    environment:
+      PCBTESTER_DATA: /data
+      # Whole KiCad trees with STEP models and fab outputs are large.
+      # Override in a .env file beside this compose file, or on the command line.
+      PCBTESTER_MAX_UPLOAD_MB: ${PCBTESTER_MAX_UPLOAD_MB:-1024}
+      PCBTESTER_MAX_UNZIPPED_MB: ${PCBTESTER_MAX_UNZIPPED_MB:-8192}
+      PCBTESTER_MAX_FILES: ${PCBTESTER_MAX_FILES:-100000}
+
+volumes:
+  pcbtester-data:

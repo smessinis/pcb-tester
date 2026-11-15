@@ -1,0 +1,7 @@
+{
+  "parts": [
+    "STM32H743VITx.json",
+    "STM32H743ZITx.json"
+  ],
+  "note": "Add a part by dropping another JSON file of this shape into this directory."
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PCB Tester</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <p class="eyebrow">Pre-production</p>
+      <h1>PCB Tester</h1>
+    </div>
+    <p class="lede">Upload a KiCad 7, 8 or 9 project. ERC, DRC, the netlist checks, STM32 pinmux and a few ngspice runs come back as one report.</p>
+    <p id="health" class="health">Checking tools…</p>
+  </header>
+
+  <main>
+    <section id="upload-panel" class="panel">
+      <h2>Project</h2>
+      <label class="drop" id="drop">
+        <input id="file" type="file" accept=".zip,application/zip">
+        <span>Drop a .zip of the KiCad folder, or choose a file.</span>
+        <span class="hint">The zip should contain the .kicad_pro, schematic and PCB. 3D models, images, PDFs, Gerbers and KiCad backup folders are left out.</span>
+      </label>
+      <p id="upload-status" class="status-line"></p>
+    </section>
+
+    <section id="setup" class="panel hidden">
+      <h2 id="project-name">Project</h2>
+      <p id="project-meta" class="meta"></p>
+      <div id="mcu-line" class="meta"></div>
+      <h3>Checks</h3>
+      <div id="checks" class="checks"></div>
+      <h3>SPICE subcircuits</h3>
+      <p class="hint">Dividers and RC filters use the schematic values. Regulators are a behavioral clamp, not a vendor model. Uncheck anything you do not want run.</p>
+      <div id="spice" class="spice"></div>
+      <label class="stimulus">Stimulus overrides
+        <input id="stimuli" type="text" placeholder="VBAT=16.8, +BATT=25.2" autocomplete="off">
+      </label>
+      <button id="run" type="button">Run checks</button>
+    </section>
+
+    <section id="progress" class="panel hidden">
+      <h2>Progress</h2>
+      <ol id="steps"></ol>
+    </section>
+
+    <section id="report" class="panel hidden">
+      <div class="report-head">
+        <h2>Report</h2>
+        <div class="exports">
+          <a id="export-html" href="#">HTML</a>
+          <a id="export-pdf" href="#">PDF</a>
+        </div>
+      </div>
+      <div id="summary"></div>
+      <div id="rails"></div>
+      <div id="results"></div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

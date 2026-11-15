@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+/data/
+dist/
+*.egg-info/
+.pcbtester/
+*.zip
+.demo/

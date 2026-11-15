@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>h743_min.kicad_sch</source>
+    <date>2026-01-01</date>
+    <tool>Eeschema 9.0</tool>
+  </design>
+  <components>
+    <comp ref="U1">
+      <value>STM32H743VIT6</value>
+      <footprint>Package_QFP:LQFP-100_14x14mm_P0.5mm</footprint>
+      <libsource lib="MCU_ST_STM32H7" part="STM32H743VIT6"/>
+    </comp>
+    <comp ref="U2">
+      <value>AP2112K-3.3</value>
+      <libsource lib="Regulator_Linear" part="AP2112K-3.3"/>
+    </comp>
+    <comp ref="J1">
+      <value>Conn_01x02</value>
+      <libsource lib="Connector" part="Conn_01x02"/>
+    </comp>
+    <comp ref="PWR1">
+      <value>PWR_FLAG</value>
+      <libsource lib="power" part="PWR_FLAG"/>
+    </comp>
+    <comp ref="R1"><value>100k</value><libsource lib="Device" part="R"/></comp>
+    <comp ref="R2"><value>10k</value><libsource lib="Device" part="R"/></comp>
+    <comp ref="R3"><value>4.7k</value><libsource lib="Device" part="R"/></comp>
+    <comp ref="R4"><value>4k7</value><libsource lib="Device" part="R"/></comp>
+    <comp ref="R5"><value>10k</value><libsource lib="Device" part="R"/></comp>
+    <comp ref="C1"><value>100nF</value><libsource lib="Device" part="C"/></comp>
+    <comp ref="C2"><value>2.2uF</value><libsource lib="Device" part="C"/></comp>
+    <comp ref="C3"><value>100n</value><libsource lib="Device" part="C"/></comp>
+    <comp ref="C4"><value>100nF</value><libsource lib="Device" part="C"/></comp>
+  </components>
+  <libparts>
+    <libpart lib="MCU_ST_STM32H7" part="STM32H743VIT6">
+      <pins>
+        <pin num="6" name="VBAT" type="power_in"/>
+        <pin num="10" name="VSS" type="power_in"/>
+        <pin num="11" name="VDD" type="power_in"/>
+        <pin num="14" name="NRST" type="bidirectional"/>
+        <pin num="21" name="VDDA" type="power_in"/>
+        <pin num="22" name="PA0" type="bidirectional"/>
+        <pin num="23" name="PA1" type="bidirectional"/>
+        <pin num="25" name="PA3" type="bidirectional"/>
+        <pin num="27" name="VDD" type="power_in"/>
+        <pin num="48" name="VCAP" type="passive"/>
+        <pin num="50" name="VDD" type="power_in"/>
+        <pin num="68" name="PA9" type="bidirectional"/>
+        <pin num="69" name="PA10" type="bidirectional"/>
+        <pin num="93" name="PB7" type="bidirectional"/>
+        <pin num="94" name="BOOT0" type="input"/>
+        <pin num="95" name="PB8" type="bidirectional"/>
+        <pin num="96" name="PB9" type="bidirectional"/>
+        <pin num="100" name="VDD" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="Regulator_Linear" part="AP2112K-3.3">
+      <pins>
+        <pin num="1" name="VIN" type="power_in"/>
+        <pin num="2" name="GND" type="power_in"/>
+        <pin num="3" name="VOUT" type="power_out"/>
+        <pin num="4" name="EN" type="input"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector" part="Conn_01x02">
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="power" part="PWR_FLAG">
+      <pins><pin num="1" name="pwr" type="power_out"/></pins>
+    </libpart>
+    <libpart lib="Device" part="R">
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="C">
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <nets>
+    <net code="1" name="GND">
+      <node ref="U1" pin="10"/>
+      <node ref="U2" pin="2"/>
+      <node ref="J1" pin="2"/>
+      <node ref="R2" pin="2"/>
+      <node ref="R5" pin="2"/>
+      <node ref="C1" pin="2"/>
+      <node ref="C2" pin="2"/>
+      <node ref="C3" pin="2"/>
+      <node ref="C4" pin="2"/>
+    </net>
+    <net code="2" name="+5V">
+      <node ref="U2" pin="1"/>
+      <node ref="U2" pin="4"/>
+      <node ref="J1" pin="1"/>
+      <node ref="PWR1" pin="1"/>
+      <node ref="U1" pin="100"/>
+      <node ref="C4" pin="1"/>
+    </net>
+    <net code="3" name="+3V3">
+      <node ref="U2" pin="3"/>
+      <node ref="U1" pin="11"/>
+      <node ref="U1" pin="27"/>
+      <node ref="U1" pin="21"/>
+      <node ref="U1" pin="6"/>
+      <node ref="R3" pin="1"/>
+      <node ref="R4" pin="1"/>
+      <node ref="C1" pin="1"/>
+    </net>
+    <net code="4" name="VCAP">
+      <node ref="U1" pin="48"/>
+      <node ref="C2" pin="1"/>
+    </net>
+    <net code="5" name="USART1_TX">
+      <node ref="U1" pin="22"/>
+      <node ref="U1" pin="68"/>
+    </net>
+    <net code="6" name="USART1_RX">
+      <node ref="U1" pin="69"/>
+      <node ref="U1" pin="93"/>
+    </net>
+    <net code="7" name="I2C1_SCL">
+      <node ref="U1" pin="95"/>
+      <node ref="R3" pin="2"/>
+    </net>
+    <net code="8" name="I2C1_SDA">
+      <node ref="U1" pin="96"/>
+      <node ref="R4" pin="2"/>
+    </net>
+    <net code="9" name="IMU_SDA">
+      <node ref="U1" pin="25"/>
+    </net>
+    <net code="10" name="NRST">
+      <node ref="U1" pin="14"/>
+      <node ref="C3" pin="1"/>
+    </net>
+    <net code="11" name="BOOT0">
+      <node ref="U1" pin="94"/>
+      <node ref="R5" pin="1"/>
+    </net>
+    <net code="12" name="VBAT">
+      <node ref="R1" pin="1"/>
+    </net>
+    <net code="13" name="VSENSE">
+      <node ref="R1" pin="2"/>
+      <node ref="R2" pin="1"/>
+      <node ref="U1" pin="23"/>
+    </net>
+    <net code="14" name="unconnected-(U1-Pad50)">
+      <node ref="U1" pin="50"/>
+    </net>
+  </nets>
+</export>
