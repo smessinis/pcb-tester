@@ -1,0 +1,12 @@
+services:
+  pcbtester:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - pcbtester-data:/data
+    environment:
+      PCBTESTER_DATA: /data
+
+volumes:
+  pcbtester-data:

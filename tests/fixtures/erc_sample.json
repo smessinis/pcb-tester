@@ -1,0 +1,35 @@
+{
+  "source": "board.kicad_sch",
+  "date": "2026-01-01T00:00:00",
+  "kicad_version": "9.0.0",
+  "violations": [
+    {
+      "type": "pin_not_connected",
+      "description": "Pin not connected",
+      "severity": "error",
+      "items": [
+        {"description": "Pin 22 [PA0] of U1", "pos": {"x": 1, "y": 2}}
+      ]
+    },
+    {
+      "type": "power_pin_not_driven",
+      "description": "Power pin not driven",
+      "severity": "warning",
+      "items": [
+        {"description": "Pin 11 [VDD] of U1"}
+      ]
+    }
+  ],
+  "sheets": [
+    {
+      "violations": [
+        {
+          "type": "endpoint_off_grid",
+          "description": "Off grid",
+          "severity": "warning",
+          "items": []
+        }
+      ]
+    }
+  ]
+}
