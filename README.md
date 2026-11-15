@@ -12,7 +12,28 @@ Docker is the setup that already contains KiCad and ngspice:
 docker compose up --build
 ```
 
-Then open http://localhost:8080. Upload a `.zip` of the project folder (the `.kicad_pro`, schematic, PCB, and any project libraries).
+Then open http://localhost:8080. Upload a `.zip` of the project folder (the `.kicad_pro`, schematic, PCB, and any project libraries). 3D models, images, PDFs, Gerber/drill outputs, and KiCad `*-backups` folders are not extracted.
+
+### Upload limits
+
+Real projects are large because of STEP models and fab outputs. The server copies the zip to disk in 1 MB chunks (it does not hold the archive as one bytes object) and only the files it keeps count toward the unzipped size and the file count.
+
+| Variable | Default | What it limits |
+| --- | --- | --- |
+| `PCBTESTER_MAX_UPLOAD_MB` | 1024 | Size of the uploaded zip |
+| `PCBTESTER_MAX_UNZIPPED_MB` | 8192 | Uncompressed size of the files that are extracted |
+| `PCBTESTER_MAX_FILES` | 100000 | How many of those files may be written |
+
+`docker-compose.yml` passes the three variables through, so a `.env` file next to it or a shell prefix (`PCBTESTER_MAX_UPLOAD_MB=2048 docker compose up --build`) changes the running container. Each value has to be an integer of at least 1.
+
+Left on disk: KiCad project, schematic, board, and symbol/footprint libraries. Left out:
+
+- 3D models: `.step`, `.stp`, `.wrl`, `.wrz`, `.igs`, `.iges`, `.stl`, and anything under a `.3dshapes` directory
+- images (`.png`, `.jpg`, `.svg`, …) and `.pdf`
+- Gerber and Excellon outputs (`.gbr`, `.gtl`, `.gbl`, `.drl`, …), including a whole directory named `gerber`, `gerbers`, `fab`, `fabrication`, `jlcpcb`, `pcbway`, or `nextpcb`
+- KiCad backup trees, any directory whose name ends in `-backups`
+
+`pcbtester run` on a directory you already have on disk does not apply these limits and does not delete those files. It only reads the project, schematic, and board.
 
 On a machine that already has KiCad 9 and ngspice:
 

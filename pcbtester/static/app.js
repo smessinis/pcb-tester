@@ -52,7 +52,10 @@ async function upload(file) {
   $("setup").classList.remove("hidden");
   $("project-name").textContent = payload.name;
   const bits = [payload.schematic, payload.pcb].filter(Boolean).join(" · ");
-  $("project-meta").textContent = bits + (payload.netlist_error ? ` — netlist: ${payload.netlist_error}` : "");
+  const skipped = payload.skipped_files
+    ? ` · left out ${payload.skipped_files} unused files (3D models, images, PDFs, Gerbers, backups)`
+    : "";
+  $("project-meta").textContent = bits + skipped + (payload.netlist_error ? ` — netlist: ${payload.netlist_error}` : "");
   const mcus = payload.mcus || [];
   $("mcu-line").textContent = mcus.length
     ? mcus.map((mcu) => `${mcu.ref} ${mcu.value || ""} ${mcu.database ? "→ " + mcu.database : "(no pin database)"}`).join(" · ")

@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from pcbtester.project import ProjectError, discover, extract_zip
+from pcbtester.project import ProjectError, discover, extract_zip, limits_from_env
 from pcbtester.runner import RunOptions, catalog, execute, preview_project
 from pcbtester.report.html import render_html
 from pcbtester.report.pdf import render_pdf
@@ -52,16 +52,18 @@ def create_app(data_dir: Path | None = None) -> FastAPI:
 
     @app.post("/api/projects")
     async def upload(file: UploadFile = File(...)) -> dict:
-        blob = await file.read()
-        if not blob:
-            raise HTTPException(400, "Empty upload")
-        if len(blob) > 80 * 1024 * 1024:
-            raise HTTPException(400, "Upload is larger than 80 MB")
+        try:
+            limits = limits_from_env()
+        except ValueError as exc:
+            raise HTTPException(500, str(exc)) from exc
         project_id = uuid.uuid4().hex[:12]
         dest = root / "projects" / project_id
+        dest.mkdir(parents=True, exist_ok=True)
+        archive_path = dest / "upload.zip"
         try:
-            extracted = extract_zip(blob, dest)
-            ctx = discover(extracted)
+            await spool_upload(file, archive_path, limits.max_upload_bytes)
+            extracted = extract_zip(archive_path, dest, limits)
+            ctx = discover(extracted.root)
         except ProjectError as exc:
             raise HTTPException(400, str(exc)) from exc
         except OSError as exc:
@@ -69,12 +71,14 @@ def create_app(data_dir: Path | None = None) -> FastAPI:
         ctx.work = dest / "work"
         meta = {
             "id": project_id,
-            "root": str(extracted),
+            "root": str(extracted.root),
             "work": str(ctx.work),
         }
         (dest / "project.json").write_text(json.dumps(meta))
         preview = preview_project(ctx)
         preview["project_id"] = project_id
+        preview["kept_files"] = extracted.kept_files
+        preview["skipped_files"] = extracted.skipped_files
         return preview
 
     @app.post("/api/projects/{project_id}/jobs")
@@ -156,6 +160,34 @@ def create_app(data_dir: Path | None = None) -> FastAPI:
     if STATIC_DIR.exists():
         app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
     return app
+
+
+async def spool_upload(upload: UploadFile, dest: Path, max_bytes: int) -> None:
+    """Copy an upload to disk in 1 MB chunks.
+
+    Starlette has already spooled the body to a temporary file. Reading it
+    back in one ``read()`` would copy the whole archive into memory, which
+    is what made a large KiCad zip fail the process before the size check
+    could even be useful.
+    """
+    written = 0
+    limit_mb = max(1, max_bytes // (1024 * 1024))
+    try:
+        with dest.open("wb") as handle:
+            while True:
+                chunk = await upload.read(1024 * 1024)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if written > max_bytes:
+                    raise ProjectError(f"Upload is larger than {limit_mb} MB")
+                handle.write(chunk)
+    except Exception:
+        dest.unlink(missing_ok=True)
+        raise
+    if written == 0:
+        dest.unlink(missing_ok=True)
+        raise ProjectError("Empty upload")
 
 
 def _report_of(job_id: str, jobs: dict, lock: threading.Lock, root: Path) -> dict:
