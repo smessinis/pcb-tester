@@ -4,7 +4,9 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PCBTESTER_DATA=/data
+    PCBTESTER_DATA=/data \
+    KICAD10_SYMBOL_DIR=/usr/share/kicad/symbols \
+    KICAD10_FOOTPRINT_DIR=/usr/share/kicad/footprints
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates software-properties-common \
@@ -12,10 +14,15 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         kicad \
+        kicad-symbols \
+        kicad-footprints \
         ngspice \
         python3 \
         python3-pip \
         python3-venv \
+    && mkdir -p /root/.config/kicad/10.0 \
+    && cp /usr/share/kicad/template/sym-lib-table /root/.config/kicad/10.0/sym-lib-table \
+    && cp /usr/share/kicad/template/fp-lib-table /root/.config/kicad/10.0/fp-lib-table \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

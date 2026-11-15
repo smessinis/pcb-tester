@@ -74,7 +74,10 @@ async function upload(file) {
 }
 
 async function run() {
-  const checks = [...document.querySelectorAll("#checks input:checked")].map((el) => el.value);
+  let checks = [...document.querySelectorAll("#checks input:checked")].map((el) => el.value);
+  if (checks.length === 0) {
+    checks = [...document.querySelectorAll("#checks input")].map((el) => el.value);
+  }
   const spiceIds = [...document.querySelectorAll("#spice input:checked")].map((el) => el.value);
   let stimuli = {};
   try {

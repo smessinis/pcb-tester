@@ -7,6 +7,7 @@ from pcbtester.context import ProjectContext, RunOptions
 from pcbtester.elec import format_volts
 from pcbtester.models import CheckResult, Finding, rollup
 from pcbtester.power import estimate_voltages
+from pcbtester.spice.battery import adc_full_scale, divider_headroom
 from pcbtester.spice.extract import Subcircuit, detect_subcircuits
 from pcbtester.spice.ngspice import (
     NgspiceError,
@@ -24,7 +25,9 @@ class SpiceCheck(Check):
     description = (
         "Detects voltage dividers, RC filters and fixed regulators, then runs "
         "ngspice on the ones you select. Dividers and RC filters use the "
-        "schematic values. Regulators use a behavioral clamp (Vout = min(Vset, "
+        "schematic values. A battery divider is also evaluated at 4S (16.8 V) "
+        "and 6S (25.2 V), or at the cell count in the net name, and flagged "
+        "when the tap exceeds VDDA/VREF+. Regulators use a behavioral clamp (Vout = min(Vset, "
         "Vin − dropout)), not a vendor transistor model. If a fragment has no "
         "voltage or no model, it is listed and skipped."
     )
@@ -35,6 +38,11 @@ class SpiceCheck(Check):
             return CheckResult(self.id, self.title, "error", message)
         voltages = estimate_voltages(ctx.netlist)
         circuits = detect_subcircuits(ctx.netlist, voltages, options.stimuli)
+        adc_max, adc_label = adc_full_scale(ctx.netlist, voltages)
+        for circuit in circuits:
+            if circuit.kind == "divider":
+                circuit.params["adc_max"] = adc_max
+                circuit.params["adc_label"] = adc_label
         selected = _select(circuits, options.spice_ids)
         if not circuits:
             return CheckResult(
@@ -163,6 +171,21 @@ def _divider(circuit: Subcircuit, result: dict) -> tuple[Finding, dict]:
         f"{circuit.title}: V({params['mid_net']}) = {format_volts(mid)} "
         f"with {format_volts(params['vin'])} on {params['top_net']}.{assumed}"
     )
+    extra, exceeds = divider_headroom(
+        params["top_net"],
+        params["mid_net"],
+        params["r_top"],
+        params["r_bottom"],
+        float(params.get("adc_max") or 3.3),
+        str(params.get("adc_label") or "3.3 V default"),
+        nominal_vin=params["vin"],
+    )
+    if extra:
+        message = f"{message} {extra}"
+        result["pack_exceeds_adc"] = exceeds
+    if exceeds:
+        severity = "warn"
+        code = "spice.divider_adc"
     return (
         Finding(severity, code, message, refs=circuit.refs, nets=circuit.nets, details=circuit.reason),
         result,

@@ -46,5 +46,7 @@ def test_ngspice_runs_the_divider(tmp_path):
     assert result.status == "pass"
     divider = next(item for item in result.findings if item.code == "spice.divider")
     assert "VSENSE" in divider.message
-    # 12.6 * 10k / (100k + 10k) = 1.14545 V
+    # 12.6 * 10k / (100k + 10k) = 1.14545 V. 4S and 6S stay under a 3.3 V ADC.
     assert "1.145" in divider.message
+    assert "16.8 V" in divider.message
+    assert "25.2 V" in divider.message

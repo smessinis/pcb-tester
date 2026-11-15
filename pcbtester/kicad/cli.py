@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
+
+_TEMPLATE = Path("/usr/share/kicad/template")
+_SYMBOL_DIR = Path("/usr/share/kicad/symbols")
+_FOOTPRINT_DIR = Path("/usr/share/kicad/footprints")
 
 
 class KicadCliError(RuntimeError):
@@ -32,6 +37,31 @@ def kicad_version() -> str | None:
     return text.splitlines()[0] if text else None
 
 
+def prepare_kicad_env() -> dict[str, str]:
+    """Point kicad-cli at the stock symbol and footprint libraries.
+
+    Without a global sym-lib-table, ERC warns once per library nickname
+    ("does not include the symbol library …"). That is the container, not
+    the design. Copy the packaged tables into the KiCad 10 config directory
+    when the user has none, and set KICAD10_SYMBOL_DIR / KICAD10_FOOTPRINT_DIR
+    when they are not already set.
+    """
+    env = os.environ.copy()
+    if _SYMBOL_DIR.is_dir():
+        env.setdefault("KICAD10_SYMBOL_DIR", str(_SYMBOL_DIR))
+    if _FOOTPRINT_DIR.is_dir():
+        env.setdefault("KICAD10_FOOTPRINT_DIR", str(_FOOTPRINT_DIR))
+    config = Path(env.get("KICAD_CONFIG_HOME") or (Path.home() / ".config" / "kicad")) / "10.0"
+    if _TEMPLATE.is_dir():
+        config.mkdir(parents=True, exist_ok=True)
+        for name in ("sym-lib-table", "fp-lib-table"):
+            source = _TEMPLATE / name
+            dest = config / name
+            if source.is_file() and not dest.exists():
+                shutil.copy(source, dest)
+    return env
+
+
 def run_kicad(args: list[str], *, timeout: int = 180) -> subprocess.CompletedProcess[str]:
     if not kicad_available():
         raise KicadCliError("kicad-cli is not installed")
@@ -42,6 +72,7 @@ def run_kicad(args: list[str], *, timeout: int = 180) -> subprocess.CompletedPro
             text=True,
             timeout=timeout,
             check=False,
+            env=prepare_kicad_env(),
         )
     except subprocess.TimeoutExpired as exc:
         raise KicadCliError(f"kicad-cli timed out after {timeout}s", output=str(exc)) from exc

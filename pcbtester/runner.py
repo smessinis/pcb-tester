@@ -27,6 +27,8 @@ def execute(
     progress: Progress | None = None,
 ) -> dict:
     options = options or RunOptions()
+    if not check_ids:
+        check_ids = [check.id for check in available_checks()]
     ctx.work.mkdir(parents=True, exist_ok=True)
     mismatch = project_too_new(ctx.sch, ctx.pcb, kicad_version())
     if mismatch:

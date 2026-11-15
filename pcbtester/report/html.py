@@ -102,7 +102,15 @@ def _check_section(check: dict) -> str:
         nets = " ".join(f"<code>{html.escape(net)}</code>" for net in finding.get("nets") or [])
         pins = " ".join(f"<code>{html.escape(pin)}</code>" for pin in finding.get("pins") or [])
         details = finding.get("details")
-        detail_html = f"<pre>{html.escape(details)}</pre>" if details else ""
+        if details:
+            lines = [line for line in str(details).splitlines() if line.strip()]
+            label = f"show {len(lines)} item(s)" if len(lines) > 1 else "details"
+            detail_html = (
+                f"<details><summary>{html.escape(label)}</summary>"
+                f"<pre>{html.escape(details)}</pre></details>"
+            )
+        else:
+            detail_html = ""
         items.append(
             f'<li class="sev-{html.escape(finding.get("severity") or "info")}">'
             f'<span class="tag">{html.escape(finding.get("severity") or "")}</span> '

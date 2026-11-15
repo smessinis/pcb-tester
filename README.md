@@ -49,7 +49,7 @@ Check a directory from the shell:
 pcbtester run path/to/project --html report.html --pdf report.pdf
 ```
 
-`--checks` takes a comma-separated list. The default is every check except the Renode slot. `--stimulus VBAT=16.8` overrides a net voltage for the SPICE runs. `--spice id1,id2` limits which detected fragments are simulated.
+`--checks` takes a comma-separated list. The default is every check except the Renode slot. An API job with `"checks": []`, or the Run button with every box cleared, runs every registered check. `--stimulus VBAT=16.8` overrides a net voltage for the SPICE runs. `--spice id1,id2` limits which detected fragments are simulated.
 
 Rebuild the shipped STM32 pin database (needs network, only when you want a newer embassy export):
 
@@ -89,7 +89,7 @@ Each check is a class with `id`, `title`, `description` and `run(ctx, options)` 
 
 ### Schematic ERC
 
-KiCad's own electrical rules: unconnected pins, two outputs fighting, a power input with no power output, off-grid endpoints. Severity is KiCad's severity.
+KiCad's own electrical rules: unconnected pins, two outputs fighting, a power input with no power output, off-grid endpoints. Severity is KiCad's severity. Repeated rows of the same type are one line, such as `714x Symbol pin or wire end off connection grid`, with the individual pins in an expandable list. Errors are listed before warnings. "The current configuration does not include the library …" is the machine missing KiCad's global library tables, so those rows are one info. The Docker image installs the KiCad 10 symbol and footprint libraries and the stock `sym-lib-table` / `fp-lib-table` so that warning does not appear for ordinary stock parts.
 
 It does not know that PA9 can be USART1_TX, and it does not count capacitors. A custom symbol with the wrong pin type will sail through for the same reason it sails through in KiCad.
 
@@ -131,7 +131,7 @@ To add an MCU, drop another JSON file of the same shape into `pcbtester/mcu/data
 
 Detected, and shown in the UI so you can turn each one off:
 
-- **Divider.** Two resistors, shared node, other ends a rail and ground. ngspice `.op`. Compared with the resistor ratio. A net named VBAT with no voltage is stimulated at 12.6 V (3S full) and the report says so.
+- **Divider.** Two resistors, shared node, other ends a rail and ground. ngspice `.op`. Compared with the resistor ratio. A net named VBAT with no voltage is stimulated at 12.6 V (3S full) and the report says so. A battery divider is also reported at 4S (16.8 V) and 6S (25.2 V), or at the cell count in the net name (`VBAT_6S`). Set `PCBTESTER_BATTERY_MAX_V` to use one voltage instead, or `PCBTESTER_BATTERY_PACKS` (default `4S,6S`). The tap is a warning when it exceeds VDDA or VREF+ (3.3 V if those rails are not on the schematic).
 - **RC.** A series resistor into a capacitor to ground. Pull-ups onto a bulk rail capacitor are not treated as filters. Supply filters (rail to rail, resistor up to a few hundred ohms) are. The input step is the rail voltage, or 3.3 V when the input net has no voltage, and the report says which.
 - **Regulator.** Only when the part has a fixed voltage in its name (`AP2112K-3.3`) and an output net. The deck is a behavioral clamp, `min(Vset, Vin − 0.3)`, into the output capacitor and a 100 Ω load. It is not a vendor transistor model. If the input voltage or the set point is unknown, the fragment is listed and not run.
 
