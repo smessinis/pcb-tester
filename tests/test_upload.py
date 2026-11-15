@@ -47,6 +47,9 @@ def test_skip_rules_keep_the_design_and_drop_the_bulk():
     assert skip_archive_member("hw/mcu.3dshapes/mcu.wrl")
     assert skip_archive_member("jlcpcb/board.kicad_pcb")
     assert skip_archive_member("Fab/readme.txt")
+    assert skip_archive_member("board/.history/board.kicad_sch")
+    assert skip_archive_member("board/.DS_Store")
+    assert not skip_archive_member("board/history.txt")
 
 
 def test_extract_writes_only_the_design(tmp_path: Path):

@@ -2,7 +2,7 @@
 
 PCB Tester takes a KiCad project and runs a pre-production check before you send the board out. It is aimed at MCU boards such as an STM32H743 flight controller: power tree, strap pins, decoupling, pinmux, and a few analog fragments. It does not pretend to simulate the whole microcontroller.
 
-KiCad 7, 8 and 9 projects are read with KiCad 9's `kicad-cli`. A newer KiCad file than the installed CLI cannot be opened.
+KiCad 7, 8, 9 and 10 projects are read with KiCad 10's `kicad-cli`. A project saved by a newer KiCad than the installed CLI is reported once, as `Project saved with KiCad X, tester has kicad-cli Y`, instead of a load failure on every check.
 
 ## Run it
 
@@ -31,11 +31,11 @@ Left on disk: KiCad project, schematic, board, and symbol/footprint libraries. L
 - 3D models: `.step`, `.stp`, `.wrl`, `.wrz`, `.igs`, `.iges`, `.stl`, and anything under a `.3dshapes` directory
 - images (`.png`, `.jpg`, `.svg`, …) and `.pdf`
 - Gerber and Excellon outputs (`.gbr`, `.gtl`, `.gbl`, `.drl`, …), including a whole directory named `gerber`, `gerbers`, `fab`, `fabrication`, `jlcpcb`, `pcbway`, or `nextpcb`
-- KiCad backup trees, any directory whose name ends in `-backups`
+- KiCad backup trees, any directory whose name ends in `-backups`, plus `.history/` and `.DS_Store`
 
 `pcbtester run` on a directory you already have on disk does not apply these limits and does not delete those files. It only reads the project, schematic, and board.
 
-On a machine that already has KiCad 9 and ngspice:
+On a machine that already has KiCad 10 and ngspice:
 
 ```bash
 python3 -m venv .venv
@@ -95,7 +95,7 @@ It does not know that PA9 can be USART1_TX, and it does not count capacitors. A 
 
 ### PCB DRC
 
-Clearances, shorts, courtyards, unconnected copper, against the rules stored in the `.kicad_pro`. Schematic parity is not requested, so a board you have not pushed from the schematic is still checked on its own.
+Clearances, shorts, courtyards, unconnected copper, against the rules stored in the `.kicad_pro`. Schematic parity is not requested, so a board you have not pushed from the schematic is still checked on its own. A PCB file that is only a header, with no footprints, is skipped with "No board layout yet" instead of a load error.
 
 It does not know current. A 0.15 mm track on VBAT is fine if your design rules say it is.
 
@@ -154,15 +154,17 @@ Unit tests cover the value parsers, the KiCad XML netlist, ERC JSON flattening, 
 
 The end-to-end run used the public project [SREESAIARJUN/nano-h743-aio-flight-controller](https://github.com/SREESAIARJUN/nano-h743-aio-flight-controller) (KiCad 8, STM32H743VITx, IMU, baro, OSD, DroneCAN). It is not vendored here. `scripts/demo.sh` clones it and writes HTML, PDF and JSON.
 
-On KiCad 9.0.9 that run reported:
+On KiCad 10.0.8, which also opens this KiCad 8 project, that run reported:
 
-- ERC: warnings, mostly global labels that do not connect to a second sheet.
+- ERC: 139 warnings under KiCad 10. 114 are footprint-link warnings (the custom footprints are not in the stock library), plus 24 isolated labels and one local label that shares a name with a global label.
 - DRC: clean.
 - Connectivity: I2C pull-ups present (including the baro side of the 33 Ω series resistors), BOOT0 strapped, NRST and VCAP capacitor present, decoupling counted per rail. **+3V3 feeds the MCU and has no regulator output or power flag on this sheet.**
 - MCU: 33 peripheral nets (SPI, USART, TIM, SDMMC, USB) match the LQFP100 database. PA8 sits on `VBUS` and is 5 V tolerant, so it is an info rather than a violation.
 - SPICE: three RC supply filters (VDDA, both IMU rails) simulated in ngspice.
 
 `scripts/demo.sh` reproduces that.
+
+The same KiCad 10 CLI also opens a hierarchical KiCad 10 design. On [ukinori/flightcontroller](https://github.com/ukinori/flightcontroller) the STM32H743VITx sits on the `untitled.kicad_sch` sub-sheet (`/MCU/`). The netlist export names pins `PA9_68`; the parser keeps the symbol name `PA9`. USB_DM and USB_DP on that sheet match the LQFP100 database. The sibling `meshtransciever.kicad_pcb` is a 79-byte header with no footprints, and DRC is skipped with "No board layout yet".
 
 ## Limitations
 

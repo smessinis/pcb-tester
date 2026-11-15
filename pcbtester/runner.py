@@ -11,6 +11,7 @@ from pcbtester import __version__
 from pcbtester.checks.registry import available_checks, get_check
 from pcbtester.context import ProjectContext, RunOptions
 from pcbtester.kicad.cli import KicadCliError, export_netlist, kicad_version
+from pcbtester.kicad.files import project_too_new
 from pcbtester.kicad.netlist import parse_netlist
 from pcbtester.models import CheckResult, Finding
 
@@ -27,6 +28,22 @@ def execute(
 ) -> dict:
     options = options or RunOptions()
     ctx.work.mkdir(parents=True, exist_ok=True)
+    mismatch = project_too_new(ctx.sch, ctx.pcb, kicad_version())
+    if mismatch:
+        if progress:
+            progress("kicad_version", "error", mismatch)
+        return _report(
+            ctx,
+            [
+                CheckResult(
+                    "kicad_version",
+                    "KiCad version",
+                    "error",
+                    mismatch,
+                    findings=[Finding("fail", "kicad.too_new", mismatch)],
+                )
+            ],
+        )
     known = {check.id: check for check in available_checks()}
     selected = []
     unknown = []
@@ -74,6 +91,12 @@ def _ensure_netlist(ctx: ProjectContext, progress: Progress | None) -> None:
         return
     if ctx.sch is None:
         ctx.netlist_error = "This project has no schematic, so no netlist could be exported."
+        return
+    mismatch = project_too_new(ctx.sch, ctx.pcb, kicad_version())
+    if mismatch:
+        ctx.netlist_error = mismatch
+        if progress:
+            progress("netlist", "error", mismatch)
         return
     if progress:
         progress("netlist", "running", "Exporting netlist")

@@ -140,8 +140,15 @@ def skip_archive_member(name: str) -> bool:
         return True
     for part in parts[:-1]:
         lowered = part.lower()
-        if lowered in _SKIP_DIR_NAMES or lowered.endswith("-backups") or lowered.endswith(".3dshapes"):
+        if (
+            lowered in _SKIP_DIR_NAMES
+            or lowered in {".history", ".ds_store"}
+            or lowered.endswith("-backups")
+            or lowered.endswith(".3dshapes")
+        ):
             return True
+    if parts[-1].lower() == ".ds_store":
+        return True
     suffix = Path(parts[-1]).suffix.lower()
     return suffix in _SKIP_EXTENSIONS
 

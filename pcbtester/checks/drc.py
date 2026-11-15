@@ -5,6 +5,7 @@ from __future__ import annotations
 from pcbtester.checks.base import Check
 from pcbtester.context import ProjectContext, RunOptions
 from pcbtester.kicad.cli import KicadCliError, export_drc, kicad_available
+from pcbtester.kicad.files import board_has_footprints
 from pcbtester.kicad.violations import iter_violations, load_report, violation_refs
 from pcbtester.models import CheckResult, Finding, rollup
 
@@ -27,6 +28,20 @@ class DrcCheck(Check):
         del options
         if ctx.pcb is None:
             return CheckResult(self.id, self.title, "skipped", "No PCB layout in this project.")
+        if not board_has_footprints(ctx.pcb):
+            return CheckResult(
+                self.id,
+                self.title,
+                "skipped",
+                "No board layout yet.",
+                findings=[
+                    Finding(
+                        "info",
+                        "drc.no_layout",
+                        "No board layout yet. DRC was skipped because the PCB file has no footprints.",
+                    )
+                ],
+            )
         if not kicad_available():
             return CheckResult(self.id, self.title, "error", "kicad-cli is not installed, so DRC could not run.")
         dest = ctx.work / "drc.json"

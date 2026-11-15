@@ -62,6 +62,21 @@ class Netlist:
         return self.components.get(ref)
 
 
+def _pin_name(pin_info: PinInfo | None, pinfunction: str, pin_num: str) -> str:
+    """Prefer the symbol pin name over KiCad 10's ``PA9_68`` pinfunction.
+
+    KiCad 10 writes ``pinfunction="PA9_68"`` on net nodes. The libpart still
+    carries the datasheet name (``PA9``), which the strap and power checks
+    match. When the libpart is missing, strip the ``_<pin number>`` suffix.
+    """
+    if pin_info and pin_info.name and pin_info.name not in {"~", ""}:
+        return pin_info.name
+    suffix = f"_{pin_num}"
+    if pinfunction.endswith(suffix) and len(pinfunction) > len(suffix):
+        return pinfunction[: -len(suffix)]
+    return pinfunction
+
+
 def _text(element: ET.Element | None, child: str, default: str = "") -> str:
     if element is None:
         return default
@@ -126,7 +141,7 @@ def parse_netlist(source: str | Path) -> Netlist:
             pin = node_el.get("pin") or ""
             component = components.get(ref)
             pin_info = component.pins.get(pin) if component else None
-            pin_name = node_el.get("pinfunction") or (pin_info.name if pin_info else "")
+            pin_name = _pin_name(pin_info, node_el.get("pinfunction") or "", pin)
             pin_type = node_el.get("pintype") or (pin_info.type if pin_info else "")
             nodes.append(Node(ref=ref, pin=pin, pin_name=pin_name, pin_type=pin_type))
         nets.append(Net(code=net_el.get("code") or "", name=net_el.get("name") or "", nodes=nodes))
